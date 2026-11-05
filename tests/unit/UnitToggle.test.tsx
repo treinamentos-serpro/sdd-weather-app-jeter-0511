@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
 import { useState } from 'react';
@@ -47,5 +47,26 @@ describe('UnitToggle + CurrentWeather', () => {
   it('expõe os botões com estado pressionado acessível', () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: '°C' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('agrupa e permite operar as unidades pelo teclado', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<UnitToggle unit="celsius" onChange={onChange} />);
+
+    const group = screen.getByRole('group', { name: 'Unidade de temperatura' });
+    const celsiusButton = within(group).getByRole('button', { name: '°C' });
+    const fahrenheitButton = within(group).getByRole('button', { name: '°F' });
+
+    expect(celsiusButton).toHaveAttribute('aria-pressed', 'true');
+    expect(fahrenheitButton).toHaveAttribute('aria-pressed', 'false');
+
+    await user.tab();
+    expect(celsiusButton).toHaveFocus();
+    await user.tab();
+    expect(fahrenheitButton).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(onChange).toHaveBeenCalledWith('fahrenheit');
   });
 });

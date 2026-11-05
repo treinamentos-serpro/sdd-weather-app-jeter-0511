@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import type { Unit } from './types/weather';
-import { useWeather } from './hooks/useWeather';
-import SearchBar from './components/SearchBar';
-import UnitToggle from './components/UnitToggle';
 import CurrentWeather from './components/CurrentWeather';
 import ForecastList from './components/ForecastList';
-import LoadingState from './components/states/LoadingState';
-import ErrorState from './components/states/ErrorState';
+import SearchBar from './components/SearchBar';
 import EmptyState from './components/states/EmptyState';
+import ErrorState from './components/states/ErrorState';
+import LoadingState from './components/states/LoadingState';
+import UnitToggle from './components/UnitToggle';
+import { type MockWeatherStatus, useMockWeather } from './hooks/useMockWeather';
+import type { Unit } from './types/weather';
 
 /**
  * WeatherView — aplicação completa de previsão do tempo.
@@ -15,8 +15,12 @@ import EmptyState from './components/states/EmptyState';
  * Construída ao longo do treinamento de Spec-Driven Development com GitHub
  * Copilot, do briefing à entrega.
  */
-export default function App() {
-  const { status, data, error, query, search, retry } = useWeather();
+interface AppProps {
+  initialStatus?: MockWeatherStatus;
+}
+
+export default function App({ initialStatus = 'success' }: AppProps) {
+  const { status, data, query, search, retry } = useMockWeather(initialStatus);
   const [unit, setUnit] = useState<Unit>('celsius');
 
   return (
@@ -27,9 +31,9 @@ export default function App() {
             <span aria-hidden="true" className="text-2xl text-sun">
               ☀️
             </span>
-            <span className="text-lg font-bold">WeatherView</span>
+            <h1 className="text-lg font-bold">WeatherView</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             <SearchBar onSearch={search} disabled={status === 'loading'} />
             <UnitToggle unit={unit} onChange={setUnit} />
           </div>
@@ -53,7 +57,12 @@ export default function App() {
           />
         )}
 
-        {status === 'error' && error && <ErrorState message={error} onRetry={retry} />}
+        {status === 'error' && (
+          <ErrorState
+            message="Não foi possível carregar o clima. Tente novamente."
+            onRetry={retry}
+          />
+        )}
 
         {status === 'success' && data && (
           <>
@@ -63,7 +72,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="py-8 text-center text-sm text-white/40">
+      <footer className="px-4 py-8 text-center text-sm text-white/70">
         Dados por{' '}
         <a
           href="https://open-meteo.com/"
